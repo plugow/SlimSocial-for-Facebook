@@ -19,5 +19,7 @@
 
     <style name="MyDarkActionBar" parent="@android:style/Widget.Holo.Light.ActionBar">
         <item name="android:background">@android:color/black</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 </resources>

@@ -10,7 +10,6 @@ import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -27,14 +26,12 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
-
 import java.lang.ref.WeakReference;
-
 import it.rignanese.leo.slimfacebook.settings.SettingsActivity;
 import it.rignanese.leo.slimfacebook.utility.Dimension;
 import it.rignanese.leo.slimfacebook.utility.MyAdvancedWebView;
-
 import static it.rignanese.leo.slimfacebook.R.id.webView;
 
 /**
@@ -42,10 +39,12 @@ import static it.rignanese.leo.slimfacebook.R.id.webView;
  * GNU GENERAL PUBLIC LICENSE  Version 2, June 1991
  * GITHUB: https://github.com/rignaneseleo/SlimSocial-for-Facebook
  */
+@SuppressLint("SetJavaScriptEnabled")
 public class MainActivity extends Activity implements MyAdvancedWebView.Listener {
 
     private SwipeRefreshLayout swipeRefreshLayout;//the layout that allows the swipe refresh
     private MyAdvancedWebView webViewFacebook;//the main webView where is shown facebook
+    private ProgressBar progressBar;
 
     private SharedPreferences savedPreferences;//contains all the values of saved preferences
 
@@ -68,8 +67,8 @@ public class MainActivity extends Activity implements MyAdvancedWebView.Listener
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         savedPreferences = PreferenceManager.getDefaultSharedPreferences(this); // setup the sharedPreferences
+        getActionBar().setElevation(0);
 
-        SetTheme();//set the activity theme
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -79,12 +78,13 @@ public class MainActivity extends Activity implements MyAdvancedWebView.Listener
             savedPreferences.edit().putBoolean("first_run", false).apply();
         }
 
+        SetTheme();//set the activity theme
 
         SetupRefreshLayout();// setup the refresh layout
-
         ShareLinkHandler();//handle a link shared (if there is)
 
         SetupWebView();//setup webview
+        progressBar= findViewById(R.id.progressBar);
 
         SetupFullScreenVideo();
 
@@ -176,7 +176,7 @@ public class MainActivity extends Activity implements MyAdvancedWebView.Listener
     //*********************** SETUP ****************************
 
     private void SetupWebView() {
-        webViewFacebook = (MyAdvancedWebView) findViewById(webView);
+        webViewFacebook = findViewById(webView);
         webViewFacebook.setListener(this, this);
 
         webViewFacebook.clearPermittedHostnames();
@@ -185,19 +185,12 @@ public class MainActivity extends Activity implements MyAdvancedWebView.Listener
         webViewFacebook.addPermittedHostname("fb.com");
         webViewFacebook.addPermittedHostname("fb.me");
 
-    /*      webViewFacebook.addPermittedHostname("m.facebook.com");
-        webViewFacebook.addPermittedHostname("h.facebook.com");
-        webViewFacebook.addPermittedHostname("touch.facebook.com");
-      webViewFacebook.addPermittedHostname("mbasic.facebook.com");
-      webViewFacebook.addPermittedHostname("touch.facebook.com");
-	  webViewFacebook.addPermittedHostname("messenger.com");*/
-
         webViewFacebook.requestFocus(View.FOCUS_DOWN);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);//remove the keyboard issue
 
         WebSettings settings = webViewFacebook.getSettings();
 
-        webViewFacebook.setDesktopMode(true);
+        webViewFacebook.setDesktopMode(false);
         //settings.setUserAgentString("Mozilla/5.0 (BB10; Kbd) AppleWebKit/537.10+ (KHTML, like Gecko) Version/10.1.0.4633 Mobile Safari/537.10+");
         settings.setJavaScriptEnabled(true);
 
@@ -223,10 +216,6 @@ public class MainActivity extends Activity implements MyAdvancedWebView.Listener
 
         settings.setLoadsImagesAutomatically(!savedPreferences.getBoolean("pref_doNotDownloadImages", false));//to save data
 
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
-            // Hide the zoom controls for HONEYCOMB+
-            settings.setDisplayZoomControls(false);
-        }
     }
 
     private void SetupOnLongClickListener() {
@@ -299,7 +288,7 @@ public class MainActivity extends Activity implements MyAdvancedWebView.Listener
     }
 
     private void ShareLinkHandler() {
-        /** get a subject and text and check if this is a link trying to be shared */
+        /* get a subject and text and check if this is a link trying to be shared */
         String sharedSubject = getIntent().getStringExtra(Intent.EXTRA_SUBJECT);
         String sharedUrl = getIntent().getStringExtra(Intent.EXTRA_TEXT);
         Log.d("sharedUrl", "ShareLinkHandler() - sharedUrl: " + sharedUrl);
@@ -340,7 +329,7 @@ public class MainActivity extends Activity implements MyAdvancedWebView.Listener
     }
 
     private void SetupRefreshLayout() {
-        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_container);
+        swipeRefreshLayout = findViewById(R.id.swipe_container);
         swipeRefreshLayout.setColorSchemeResources(R.color.officialBlueFacebook, R.color.darkBlueSlimFacebookTheme);// set the colors
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -364,7 +353,10 @@ public class MainActivity extends Activity implements MyAdvancedWebView.Listener
         if (noConnectionError) {
             webViewFacebook.goBack();
             noConnectionError = false;
-        } else webViewFacebook.reload();
+        } else {
+            progressBar.setVisibility(View.VISIBLE);
+            swipeRefreshLayout.setVisibility(View.GONE);
+            webViewFacebook.reload();}
     }
 
 
@@ -384,7 +376,6 @@ public class MainActivity extends Activity implements MyAdvancedWebView.Listener
 
     @Override
     public void onPageStarted(String url, Bitmap favicon) {
-        swipeRefreshLayout.setRefreshing(true);
     }
 
     @Override
@@ -396,6 +387,8 @@ public class MainActivity extends Activity implements MyAdvancedWebView.Listener
         }
 
         swipeRefreshLayout.setRefreshing(false);
+        progressBar.setVisibility(View.GONE);
+        swipeRefreshLayout.setVisibility(View.VISIBLE);
 
     }
 
@@ -422,9 +415,7 @@ public class MainActivity extends Activity implements MyAdvancedWebView.Listener
 
     public boolean isInternetAvailable() {
         NetworkInfo newtworkInfo = ((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-        if (newtworkInfo != null && newtworkInfo.isAvailable() && newtworkInfo.isConnected())
-            return true;
-        else return false;
+        return newtworkInfo != null && newtworkInfo.isAvailable() && newtworkInfo.isConnected();
     }
 
     @Override
@@ -439,7 +430,7 @@ public class MainActivity extends Activity implements MyAdvancedWebView.Listener
 
     @Override
     public void onExternalPageRequest(String url) {//if the link doesn't contain 'facebook.com', open it using the browser
-        if (Uri.parse(url).getHost() != null ? Uri.parse(url).getHost().endsWith("slimsocial.leo") : false) {
+        if (Uri.parse(url).getHost() != null && Uri.parse(url).getHost().endsWith("slimsocial.leo")) {
             //he clicked on messages
             startActivity(new Intent(this, MessagesActivity.class));
         } else {

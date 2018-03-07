@@ -3,22 +3,16 @@ package it.rignanese.leo.slimfacebook.utility;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.DownloadManager;
-import android.app.DownloadManager.Request;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
-import android.os.Environment;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Base64;
-import android.view.InputEvent;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,11 +36,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebStorage.QuotaUpdater;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -82,15 +73,11 @@ public class MyAdvancedWebView extends WebView {
         boolean shouldLoadUrl(String url);
     }
 
-    public static final String PACKAGE_NAME_DOWNLOAD_MANAGER = "com.android.providers.downloads";
     protected static final int REQUEST_CODE_FILE_PICKER = 51426;
     protected static final String DATABASES_SUB_FOLDER = "/databases";
     protected static final String LANGUAGE_DEFAULT_ISO3 = "eng";
     protected static final String CHARSET_DEFAULT = "UTF-8";
-    /**
-     * Alternative browsers that have their own rendering engine and *may* be installed on this device
-     */
-    protected static final String[] ALTERNATIVE_BROWSERS = new String[]{"org.mozilla.firefox", "com.android.chrome", "com.opera.browser", "org.mozilla.firefox_beta", "com.chrome.beta", "com.opera.browser.beta"};
+
     protected WeakReference<Activity> mActivity;
     protected WeakReference<Fragment> mFragment;
     protected Listener mListener;
@@ -141,19 +128,8 @@ public class MyAdvancedWebView extends WebView {
         setListener(listener, requestCodeFilePicker);
     }
 
-    public void setListener(final Fragment fragment, final Listener listener) {
-        setListener(fragment, listener, REQUEST_CODE_FILE_PICKER);
-    }
 
-    public void setListener(final Fragment fragment, final Listener listener, final int requestCodeFilePicker) {
-        if (fragment != null) {
-            mFragment = new WeakReference<Fragment>(fragment);
-        } else {
-            mFragment = null;
-        }
 
-        setListener(listener, requestCodeFilePicker);
-    }
 
     protected void setListener(final Listener listener, final int requestCodeFilePicker) {
         mListener = listener;
@@ -170,77 +146,8 @@ public class MyAdvancedWebView extends WebView {
         mCustomWebChromeClient = client;
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
-    public void setGeolocationEnabled(final boolean enabled) {
-        if (enabled) {
-            getSettings().setJavaScriptEnabled(true);
-            getSettings().setGeolocationEnabled(true);
-            setGeolocationDatabasePath();
-        }
 
-        mGeolocationEnabled = enabled;
-    }
 
-    @SuppressLint("NewApi")
-    protected void setGeolocationDatabasePath() {
-        final Activity activity;
-
-        if (mFragment != null && mFragment.get() != null && Build.VERSION.SDK_INT >= 11 && mFragment.get().getActivity() != null) {
-            activity = mFragment.get().getActivity();
-        } else if (mActivity != null && mActivity.get() != null) {
-            activity = mActivity.get();
-        } else {
-            return;
-        }
-
-        getSettings().setGeolocationDatabasePath(activity.getFilesDir().getPath());
-    }
-
-    public void setUploadableFileTypes(final String mimeType) {
-        mUploadableFileTypes = mimeType;
-    }
-
-    /**
-     * Loads and displays the provided HTML source text
-     *
-     * @param html the HTML source text to load
-     */
-    public void loadHtml(final String html) {
-        loadHtml(html, null);
-    }
-
-    /**
-     * Loads and displays the provided HTML source text
-     *
-     * @param html    the HTML source text to load
-     * @param baseUrl the URL to use as the page's base URL
-     */
-    public void loadHtml(final String html, final String baseUrl) {
-        loadHtml(html, baseUrl, null);
-    }
-
-    /**
-     * Loads and displays the provided HTML source text
-     *
-     * @param html       the HTML source text to load
-     * @param baseUrl    the URL to use as the page's base URL
-     * @param historyUrl the URL to use for the page's history entry
-     */
-    public void loadHtml(final String html, final String baseUrl, final String historyUrl) {
-        loadHtml(html, baseUrl, historyUrl, "utf-8");
-    }
-
-    /**
-     * Loads and displays the provided HTML source text
-     *
-     * @param html       the HTML source text to load
-     * @param baseUrl    the URL to use as the page's base URL
-     * @param historyUrl the URL to use for the page's history entry
-     * @param encoding   the encoding or charset of the HTML source text
-     */
-    public void loadHtml(final String html, final String baseUrl, final String historyUrl, final String encoding) {
-        loadDataWithBaseURL(baseUrl, html, "text/html", encoding, historyUrl);
-    }
 
     @SuppressLint("NewApi")
     @SuppressWarnings("all")
@@ -291,7 +198,7 @@ public class MyAdvancedWebView extends WebView {
                             if (intent.getDataString() != null) {
                                 dataUris = new Uri[]{Uri.parse(intent.getDataString())};
                             } else {
-                                if (Build.VERSION.SDK_INT >= 16) {
+
                                     if (intent.getClipData() != null) {
                                         final int numSelectedFiles = intent.getClipData().getItemCount();
 
@@ -301,7 +208,7 @@ public class MyAdvancedWebView extends WebView {
                                             dataUris[i] = intent.getClipData().getItemAt(i).getUri();
                                         }
                                     }
-                                }
+
                             }
                         } catch (Exception ignored) {
                         }
@@ -322,94 +229,41 @@ public class MyAdvancedWebView extends WebView {
         }
     }
 
-    /**
-     * Adds an additional HTTP header that will be sent along with every HTTP `GET` request
-     * <p>
-     * This does only affect the main requests, not the requests to included resources (e.g. images)
-     * <p>
-     * If you later want to delete an HTTP header that was previously added this way, call `removeHttpHeader()`
-     * <p>
-     * The `WebView` implementation may in some cases overwrite headers that you set or unset
-     *
-     * @param name  the name of the HTTP header to add
-     * @param value the value of the HTTP header to send
-     */
-    public void addHttpHeader(final String name, final String value) {
-        mHttpHeaders.put(name, value);
-    }
 
-    /**
-     * Removes one of the HTTP headers that have previously been added via `addHttpHeader()`
-     * <p>
-     * If you want to unset a pre-defined header, set it to an empty string with `addHttpHeader()` instead
-     * <p>
-     * The `WebView` implementation may in some cases overwrite headers that you set or unset
-     *
-     * @param name the name of the HTTP header to remove
-     */
-    public void removeHttpHeader(final String name) {
-        mHttpHeaders.remove(name);
-    }
+
 
     public void addPermittedHostname(String hostname) {
         mPermittedHostnames.add(hostname);
     }
 
-    public void addPermittedHostnames(Collection<? extends String> collection) {
-        mPermittedHostnames.addAll(collection);
-    }
 
-    public List<String> getPermittedHostnames() {
-        return mPermittedHostnames;
-    }
-
-    public void removePermittedHostname(String hostname) {
-        mPermittedHostnames.remove(hostname);
-    }
 
     public void clearPermittedHostnames() {
         mPermittedHostnames.clear();
     }
 
-    public boolean onBackPressed() {
-        if (canGoBack()) {
-            goBack();
-            return false;
-        } else {
-            return true;
-        }
-    }
 
     @SuppressLint("NewApi")
     protected static void setAllowAccessFromFileUrls(final WebSettings webSettings, final boolean allowed) {
-        if (Build.VERSION.SDK_INT >= 16) {
             webSettings.setAllowFileAccessFromFileURLs(allowed);
             webSettings.setAllowUniversalAccessFromFileURLs(allowed);
-        }
     }
 
-    @SuppressWarnings("static-method")
-    public void setCookiesEnabled(final boolean enabled) {
-        CookieManager.getInstance().setAcceptCookie(enabled);
-    }
 
     @SuppressLint("NewApi")
     public void setThirdPartyCookiesEnabled(final boolean enabled) {
-        if (Build.VERSION.SDK_INT >= 21) {
+
             CookieManager.getInstance().setAcceptThirdPartyCookies(this, enabled);
-        }
+
     }
 
-    public void setMixedContentAllowed(final boolean allowed) {
-        setMixedContentAllowed(getSettings(), allowed);
-    }
 
     @SuppressWarnings("static-method")
     @SuppressLint("NewApi")
     protected void setMixedContentAllowed(final WebSettings webSettings, final boolean allowed) {
-        if (Build.VERSION.SDK_INT >= 21) {
+
             webSettings.setMixedContentMode(allowed ? WebSettings.MIXED_CONTENT_ALWAYS_ALLOW : WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        }
+
     }
 
     public void setDesktopMode(final boolean enabled) {
@@ -438,7 +292,7 @@ public class MyAdvancedWebView extends WebView {
         }
 
         if (context instanceof Activity) {
-            mActivity = new WeakReference<Activity>((Activity) context);
+            mActivity = new WeakReference<>((Activity) context);
         }
 
         mLanguageIso3 = getLanguageIso3();
@@ -457,13 +311,7 @@ public class MyAdvancedWebView extends WebView {
         webSettings.setBuiltInZoomControls(false);
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
-        if (Build.VERSION.SDK_INT < 18) {
-            webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
-        }
         webSettings.setDatabaseEnabled(true);
-        if (Build.VERSION.SDK_INT < 19) {
-            webSettings.setDatabasePath(databaseDir);
-        }
         setMixedContentAllowed(webSettings, true);
 
         setThirdPartyCookiesEnabled(true);
@@ -995,51 +843,17 @@ public class MyAdvancedWebView extends WebView {
             }
     }
 
-    public void loadUrl(String url, final boolean preventCaching) {
-        if (preventCaching) {
-            url = makeUrlUnique(url);
-        }
-
-        loadUrl(url);
-    }
-
-    public void loadUrl(String url, final boolean preventCaching, final Map<String, String> additionalHttpHeaders) {
-        if (preventCaching) {
-            url = makeUrlUnique(url);
-        }
-
-        loadUrl(url, additionalHttpHeaders);
-    }
 
     //method by rignaneseleo
     private boolean checkKeepLoading(String url) {
         //true if it should keep load
         if (mListener == null) return true;
 
-        if (mListener.shouldLoadUrl(url))
-            return true; //keep loading
-        else return false;
+        //keep loading
+        return mListener.shouldLoadUrl(url);
     }
 
-    protected static String makeUrlUnique(final String url) {
-        StringBuilder unique = new StringBuilder();
-        unique.append(url);
 
-        if (url.contains("?")) {
-            unique.append('&');
-        } else {
-            if (url.lastIndexOf('/') <= 7) {
-                unique.append('/');
-            }
-            unique.append('?');
-        }
-
-        unique.append(System.currentTimeMillis());
-        unique.append('=');
-        unique.append(1);
-
-        return unique.toString();
-    }
 
     protected boolean isHostnameAllowed(final String url) {
         // if the permitted hostnames have not been restricted to a specific set
@@ -1160,191 +974,20 @@ public class MyAdvancedWebView extends WebView {
         i.addCategory(Intent.CATEGORY_OPENABLE);
 
         if (allowMultiple) {
-            if (Build.VERSION.SDK_INT >= 18) {
-                i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-            }
+            i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         }
 
         i.setType(mUploadableFileTypes);
 
-        if (mFragment != null && mFragment.get() != null && Build.VERSION.SDK_INT >= 11) {
+        if (mFragment != null && mFragment.get() != null) {
             mFragment.get().startActivityForResult(Intent.createChooser(i, getFileUploadPromptLabel()), mRequestCodeFilePicker);
         } else if (mActivity != null && mActivity.get() != null) {
             mActivity.get().startActivityForResult(Intent.createChooser(i, getFileUploadPromptLabel()), mRequestCodeFilePicker);
         }
     }
 
-    /**
-     * Returns whether file uploads can be used on the current device (generally all platform versions except for 4.4)
-     *
-     * @return whether file uploads can be used
-     */
-    public static boolean isFileUploadAvailable() {
-        return isFileUploadAvailable(false);
-    }
 
-    /**
-     * Returns whether file uploads can be used on the current device (generally all platform versions except for 4.4)
-     * <p>
-     * On Android 4.4.3/4.4.4, file uploads may be possible but will come with a wrong MIME type
-     *
-     * @param needsCorrectMimeType whether a correct MIME type is required for file uploads or `application/octet-stream` is acceptable
-     * @return whether file uploads can be used
-     */
-    public static boolean isFileUploadAvailable(final boolean needsCorrectMimeType) {
-        if (Build.VERSION.SDK_INT == 19) {
-            final String platformVersion = (Build.VERSION.RELEASE == null) ? "" : Build.VERSION.RELEASE;
 
-            return !needsCorrectMimeType && (platformVersion.startsWith("4.4.3") || platformVersion.startsWith("4.4.4"));
-        } else {
-            return true;
-        }
-    }
 
-    /**
-     * Handles a download by loading the file from `fromUrl` and saving it to `toFilename` on the external storage
-     * <p>
-     * This requires the two permissions `android.permission.INTERNET` and `android.permission.WRITE_EXTERNAL_STORAGE`
-     * <p>
-     * Only supported on API level 9 (Android 2.3) and above
-     *
-     * @param context    a valid `Context` reference
-     * @param fromUrl    the URL of the file to download, e.g. the one from `AdvancedWebView.onDownloadRequested(...)`
-     * @param toFilename the name of the destination file where the download should be saved, e.g. `myImage.jpg`
-     * @return whether the download has been successfully handled or not
-     */
-    @SuppressLint("NewApi")
-    public static boolean handleDownload(final Context context, final String fromUrl, final String toFilename) {
-        if (Build.VERSION.SDK_INT < 9) {
-            throw new RuntimeException("Method requires API level 9 or above");
-        }
-
-        final Request request = new Request(Uri.parse(fromUrl));
-        if (Build.VERSION.SDK_INT >= 11) {
-            request.allowScanningByMediaScanner();
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        }
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, toFilename);
-
-        final DownloadManager dm = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
-        try {
-            try {
-                dm.enqueue(request);
-            } catch (SecurityException e) {
-                if (Build.VERSION.SDK_INT >= 11) {
-                    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-                }
-                dm.enqueue(request);
-            }
-
-            return true;
-        }
-        // if the download manager app has been disabled on the device
-        catch (IllegalArgumentException e) {
-            // show the settings screen where the user can enable the download manager app again
-            openAppSettings(context, MyAdvancedWebView.PACKAGE_NAME_DOWNLOAD_MANAGER);
-
-            return false;
-        }
-    }
-
-    @SuppressLint("NewApi")
-    private static boolean openAppSettings(final Context context, final String packageName) {
-        if (Build.VERSION.SDK_INT < 9) {
-            throw new RuntimeException("Method requires API level 9 or above");
-        }
-
-        try {
-            final Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            intent.setData(Uri.parse("package:" + packageName));
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            context.startActivity(intent);
-
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    /**
-     * Wrapper for methods related to alternative browsers that have their own rendering engines
-     */
-    public static class Browsers {
-
-        /**
-         * Package name of an alternative browser that is installed on this device
-         */
-        private static String mAlternativePackage;
-
-        /**
-         * Returns whether there is an alternative browser with its own rendering engine currently installed
-         *
-         * @param context a valid `Context` reference
-         * @return whether there is an alternative browser or not
-         */
-        public static boolean hasAlternative(final Context context) {
-            return getAlternative(context) != null;
-        }
-
-        /**
-         * Returns the package name of an alternative browser with its own rendering engine or `null`
-         *
-         * @param context a valid `Context` reference
-         * @return the package name or `null`
-         */
-        public static String getAlternative(final Context context) {
-            if (mAlternativePackage != null) {
-                return mAlternativePackage;
-            }
-
-            final List<String> alternativeBrowsers = Arrays.asList(ALTERNATIVE_BROWSERS);
-            final List<ApplicationInfo> apps = context.getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
-
-            for (ApplicationInfo app : apps) {
-                if (!app.enabled) {
-                    continue;
-                }
-
-                if (alternativeBrowsers.contains(app.packageName)) {
-                    mAlternativePackage = app.packageName;
-
-                    return app.packageName;
-                }
-            }
-
-            return null;
-        }
-
-        /**
-         * Opens the given URL in an alternative browser
-         *
-         * @param context a valid `Activity` reference
-         * @param url     the URL to open
-         */
-        public static void openUrl(final Activity context, final String url) {
-            openUrl(context, url, false);
-        }
-
-        /**
-         * Opens the given URL in an alternative browser
-         *
-         * @param context           a valid `Activity` reference
-         * @param url               the URL to open
-         * @param withoutTransition whether to switch to the browser `Activity` without a transition
-         */
-        public static void openUrl(final Activity context, final String url, final boolean withoutTransition) {
-            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            intent.setPackage(getAlternative(context));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            context.startActivity(intent);
-
-            if (withoutTransition) {
-                context.overridePendingTransition(0, 0);
-            }
-        }
-
-    }
 
 }

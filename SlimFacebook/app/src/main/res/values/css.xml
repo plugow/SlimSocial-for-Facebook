@@ -141,7 +141,7 @@ input[type=text],
 ._1h_j,
 .touch ._3e18,
 .touch ._533c {
-    background: #000 !important;
+    background: #263238 !important;
     /* the background */
 }
 ._65wz {
@@ -157,7 +157,7 @@ h3._391s {
     color: #383a3e !important;
 }
 ._50cg._2ss {
-    background: #000 !important;
+    background: #263238 !important;
 }
 .composerLinkText,
 .fcg,
@@ -284,13 +284,13 @@ article,
 ._usq,
 ._55wq,
 ._400s {
-    border: 1px dotted #383838 !important;
+    border: 2px solid #000051 !important;
     border-radius: 4px;
 }
 ._1_oa,
 ._bmx,
 ._52x1 {
-    border-bottom: 1px dotted #383838 !important;
+    border-bottom: 1    px dotted #383838 !important;
 }
 article h3 {
     color: #999 !important;
@@ -311,11 +311,11 @@ article h3 {
 ._59te.popoverOpen,
 ._59te.isActivem,
 ._59te {
-    background: #000;
+    background: #1a237e;
     /*topbar*/
 
-    border-bottom: 1px solid #444;
-    border-right: 1px solid #444;
+    border-bottom: 0px solid #444;
+    border-right: 0px solid #444;
 }
 /* #feed_jewel ._59tf {
         background-position: -22px -103px;

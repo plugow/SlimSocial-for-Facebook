@@ -5,19 +5,36 @@ SlimSocial for Facebook is an Open Source app realized by Leonardo Rignanese
 -->
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    >
+    android:layout_height="match_parent">
+
+    <LinearLayout android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/blueSlimFacebookTheme">
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="150dp"
+        android:indeterminate="true"
+        android:indeterminateTintMode="src_atop"
+        android:indeterminateTint="@android:color/white" />
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipe_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent"
+        android:visibility="gone">
 
         <it.rignanese.leo.slimfacebook.utility.MyAdvancedWebView
             android:id="@+id/webView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="center" />
+            android:layout_gravity="center"
+            />
+
     </android.support.v4.widget.SwipeRefreshLayout>
 
     <FrameLayout
@@ -25,5 +42,5 @@ SlimSocial for Facebook is an Open Source app realized by Leonardo Rignanese
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"/>
-
+    </LinearLayout>
 </merge>
